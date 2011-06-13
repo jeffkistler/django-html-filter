@@ -51,12 +51,12 @@ class HTMLFilterMiddleware(object):
         """
         # Parse the response
         tree_type = settings.TREE_TYPE
-        if hasattr(response, 'rendered_content'):
-            content = response.rendered_content
-        else:
-            content = response.content
+        # Here we check for a TemplateResponse in the case we're being
+        # used as a view decorator.
+        if hasattr(response, 'render') and callable(response.render):
+            response.render()
         tree = html5parser.parse(
-            content, treebuilder=tree_type, encoding=encoding
+            response.content, treebuilder=tree_type, encoding=encoding
         )
         # Build the serializer
         walker = treewalkers.getTreeWalker(tree_type)
@@ -71,7 +71,6 @@ class HTMLFilterMiddleware(object):
         # Add a flag to prevent further filtering if the decorator is already
         # used on this response.
         setattr(response, settings.FILTERED_FLAG, True)
-        response.html_filter_applied = True
         return response
 
     def should_filter(self, request, response, content_type):
