@@ -87,6 +87,8 @@ class HTMLFilterMiddleware(object):
             return False
         elif parse_subtype(content_type) not in KNOWN_TYPES:
             return False
+        elif response.get('Content-Encoding', 'identity') != 'identity':
+            return False
         return True
 
     def process_response(self, request, response):
